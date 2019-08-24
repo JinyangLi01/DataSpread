@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="52c5efd6-a1ec-41ff-b4d1-a460c3bec63d" name="Default Changelist" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" path="/usr/local/go" />
+  <component name="ProjectId" id="1PliKYlx6qCaAfWXKXlzcsqYtg4" />
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="go.autoimport" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="go build manager.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="source" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/proxy/manager.go" />
+      <directory value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build manager.go" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fit/fit.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fit/fit.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fit/fit.test.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fit/fit.test.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/attach/attach.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/attach/attach.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/attach/attach.test.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/attach/attach.test.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/search/search.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/search/search.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/search/SearchHelper.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/search/SearchHelper.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/zmodem/zmodem.test.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/zmodem/zmodem.test.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/zmodem/zmodem.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/zmodem/zmodem.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/terminado/terminado.test.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/terminado/terminado.test.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/terminado/terminado.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/terminado/terminado.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fullscreen/fullscreen.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fullscreen/fullscreen.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fullscreen/fullscreen.test.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/fullscreen/fullscreen.test.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/winptyCompat/winptyCompat.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/winptyCompat/winptyCompat.js" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/winptyCompat/winptyCompat.test.js.map" />
+        <option value="$PROJECT_DIR$/static/xterm/xterm.js/addons/winptyCompat/winptyCompat.test.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fit/fit.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fit/fit.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fit/fit.test.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fit/fit.test.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/attach/attach.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/attach/attach.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/attach/attach.test.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/attach/attach.test.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/search/search.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/search/search.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/search/SearchHelper.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/search/SearchHelper.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/zmodem/zmodem.test.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/zmodem/zmodem.test.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/zmodem/zmodem.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/zmodem/zmodem.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/terminado/terminado.test.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/terminado/terminado.test.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/terminado/terminado.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/terminado/terminado.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fullscreen/fullscreen.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fullscreen/fullscreen.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fullscreen/fullscreen.test.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/fullscreen/fullscreen.test.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/winptyCompat/winptyCompat.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/winptyCompat/winptyCompat.js" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/winptyCompat/winptyCompat.test.js.map" />
+        <option value="$PROJECT_DIR$/terminal-server/xterm.js/addons/winptyCompat/winptyCompat.test.js" />
+      </list>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/proxy/manager.go</url>
+          <line>236</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
