@@ -17,6 +17,9 @@ import (
 	"time"
 	"unicode"
 
+	"./proxy/encode"
+	"./proxy/stree"
+
 	"github.com/csimplestring/go-csv/detector"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -78,7 +81,9 @@ func gridInstance(c *Client) {
 
 	// if Grid serialized file exists try to load that
 	//sheetFile := c.hub.rootDirectory + "sheetdata/sheet.serialized"
+	//streeFile := c.hub.rootDirectory + "sheetdata/stree.serialized"
 	dbtableFile := c.hub.rootDirectory + "sheetdata/dbtable.txt"
+	streeFile := c.hub.rootDirectory + "sheetdata/stree.txt"
 	if _, err := os.Stat(dbtableFile); os.IsNotExist(err) {
 		log.Printf("Here is grid.go, dbtablefile does not exist.")
 
@@ -287,6 +292,19 @@ func gridInstance(c *Client) {
 
 	}
 
+	//---------------------------------------stree-----------------------------------------------------------------------------------
+	var tree *stree.Tree
+	//	dbtableFile := c.hub.rootDirectory + "sheetdata/dbtable.txt"
+	if _, err := os.Stat(streeFile); os.IsNotExist(err) {
+		log.Printf("streeFile does not exist.\n")
+	} else {
+		log.Printf("streeFile exists, read in the stree.\n")
+		tree = encode.ReadFromFile(streeFile)
+		tree.PrintTree()
+	}
+
+	//---------------------------------------stree-----------------------------------------------------------------------------------
+
 	sendSheets(c, &grid)
 
 	grid.PythonResultChannel = make(chan string, 256)
@@ -451,9 +469,9 @@ func gridInstance(c *Client) {
 
 				c.hub.mainThreadChannel <- "EXIT"
 
-			case "GET":
-
-				sendCellsInRange(ReferenceRange{String: parsed[1], SheetIndex: getIndexFromString(parsed[2])}, &grid, c)
+			case "GET": // ask for cells in a specific range
+				//parsed[1] = "GET"
+				sendCellsInRange(ReferenceRange{String: parsed[1], SheetIndex: getIndexFromString(parsed[2])}, &grid, c, tree)
 
 			case "SWITCHSHEET":
 
@@ -1465,9 +1483,85 @@ func invalidateView(grid *Grid, c *Client) {
 	c.send <- json
 }
 
-func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client) {
+func referenceFromUserViewToGridByStree(referenceInUserView Reference, t *stree.Tree) (Reference, bool) {
+	log.Println("Here is referenceFromUserViewToGridByStree in grid.go")
+	//log.Printf("referenceInUserView=\n")
+	//log.Print(referenceInUserView)
+	a1 := referenceInUserView.String
+	leng := len(a1)
+	numInStr := a1[1:leng]
+	//log.Printf("a1 = %s, leng = %d, numInStr = %s\n", a1, leng, numInStr)
+	userPos, _ := strconv.Atoi(numInStr)
+	log.Printf("userPos = %d\n", userPos)
+	if userPos == 1 {
+		return referenceInUserView, true
+	}
+	userPos--
+	if userPos > t.NumKeys {
+		log.Printf("t.NumKeys +1 = %d\n", t.NumKeys+1)
+		return referenceInUserView, false
+	}
+	_, _, treeKey, err := t.Query(userPos, false)
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Printf("treeKey = %d\n", treeKey)
+	sheetindex := referenceInUserView.SheetIndex
+	newstr := string(referenceInUserView.String[0]) + strconv.Itoa(treeKey+1)
+	log.Printf("newstr = %s\n", newstr)
+	return Reference{newstr, sheetindex}, true
+}
+
+func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client, t *stree.Tree) {
+
+	log.Printf("New!! Here is sendCellsInRange in grid.go.\n")
 
 	cells := cellRangeToCells(cellRange)
+	log.Printf("Here is sendCellsInRange in grid.go, returned from cellRangeToCells\n")
+	//cells: []reference
+	//Reference = {A1, 0}   String, SheetIndex
+
+	cellsToSend := [][]string{}
+
+	for _, referenceInUserView := range cells {
+
+		referenceForGrid, whetherExist := referenceFromUserViewToGridByStree(referenceInUserView, t)
+		log.Printf("Here is sendCellsInRange in grid.go, returned from referenceFromUserViewToGridByStree\n")
+		log.Println("referenceForGrid.String:")
+		log.Printf(referenceForGrid.String)
+
+		var dv *DynamicValue
+		if whetherExist == false {
+			dv = nil
+		} else {
+			dv = getDataFromRef(referenceForGrid, grid)
+		}
+
+		if dv != nil {
+			stringAfter := convertToString(dv)
+			cellsToSend = append(cellsToSend, []string{relativeReferenceString(referenceInUserView), stringAfter.DataString, "=" + dv.DataFormula, strconv.Itoa(int(dv.SheetIndex))})
+			//                                               A1                                      ID            =     dv.DataFormula      dv.SheetIndex
+		}
+		//DataFormula: 0 if not a formular,
+		//			   furmular itself if it is valie
+		//                     have some special letters if not valid
+		// cell to string
+	}
+	log.Println("cellsToSend:")
+	log.Println(cellsToSend)
+	sendCells(&cellsToSend, c)
+}
+
+/*
+//-----------------------------------------------------------need to change for ordered data----------------------------------------------------
+// this is the original function
+func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client) {
+
+	log.Printf("New!! Here is sendCellsInRange in grid.go.\n")
+
+	cells := cellRangeToCells(cellRange)
+	//cells: []reference
+	//Reference = {A1, 0}   String, SheetIndex
 
 	cellsToSend := [][]string{}
 
@@ -1478,13 +1572,19 @@ func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client) {
 		if dv != nil {
 			stringAfter := convertToString(dv)
 			cellsToSend = append(cellsToSend, []string{relativeReferenceString(reference), stringAfter.DataString, "=" + dv.DataFormula, strconv.Itoa(int(dv.SheetIndex))})
+			//                                               A1                                      ID            =     dv.DataFormula      dv.SheetIndex
 		}
-
+		//DataFormula: 0 if not a formular,
+		//			   furmular itself if it is valie
+		//                     have some special letters if not valid
 		// cell to string
 	}
-
+	log.Println("cellsToSend:")
+	log.Println(cellsToSend)
 	sendCells(&cellsToSend, c)
 }
+//------------------------------------------------------------need to change for ordered data--------------------------------------------
+*/
 
 func relativeReferenceString(reference Reference) string {
 	stringRef := reference.String
@@ -2434,6 +2534,7 @@ func getIntFromString(intString string) int {
 	return intValue
 }
 
+//sheetIndexString=A1:B3
 func getIndexFromString(sheetIndexString string) int8 {
 	sheetIndexInt, err := strconv.Atoi(sheetIndexString)
 	sheetIndex := int8(sheetIndexInt)

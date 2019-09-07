@@ -1333,7 +1333,7 @@
 		this.cellArrayToStringRange = function(cellRange){
 			var cellIndexStringStart = this.cellZeroIndexToString(cellRange[0][0], cellRange[0][1]);
 			var cellIndexStringEnd = this.cellZeroIndexToString(cellRange[1][0], cellRange[1][1]);
-			return cellIndexStringStart + ":" + cellIndexStringEnd;
+			return cellIndexStringStart + ":" + cellIndexStringEnd; //A1:C3
 		}
 
 		this.refreshView = function(){
@@ -1351,7 +1351,7 @@
 		}
 
 		this.refreshDataRange = function(range, sheetIndex){
-			this.wsManager.send('{"arguments":["GET","'+range+'","'+sheetIndex+'"]}')
+			this.wsManager.send('{"arguments":["GET","'+range+'","'+sheetIndex+'"]}') //range=A1:B3
 		}
 
 		this.deselect_input_field = function(set_values){

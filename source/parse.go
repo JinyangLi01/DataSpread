@@ -394,7 +394,11 @@ func referencesToUpperCase(formula string) string {
 	return formula
 }
 
+// get cell references, send cell contents
 func cellRangeToCells(referenceRange ReferenceRange) []Reference {
+	log.Printf("Here is parse.go, cellRangeToCells. referenceRange: \n")
+	log.Printf("%s, %d\n", referenceRange.String, referenceRange.SheetIndex)
+	// A1:N33, 0
 	references := []Reference{}
 
 	cell1Row, cell1Column, cell2Row, cell2Column := cellRangeBoundaries(referenceRange.String)
@@ -417,11 +421,35 @@ func cellRangeToCells(referenceRange ReferenceRange) []Reference {
 	for x := cell1Column; x <= cell2Column; x++ {
 		for y := cell1Row; y <= cell2Row; y++ {
 			references = append(references, Reference{String: indexToLetters(x) + strconv.Itoa(y), SheetIndex: referenceRange.SheetIndex})
+			/*log.Printf("x=%d, y=%d\n", x, y)
+			s1 := indexToLetters(x)
+			s2 := strconv.Itoa(y)
+			s3 := s1 + s2
+			log.Println(s3)
+			log.Printf("SheetIndex=%d\n", referenceRange.SheetIndex) */
 		}
 	}
 
+	//Reference {String string, SheetIndex int8}
+	// {A1, 0}
+
 	return references
 }
+
+/*
+cellsToSend:
+[[A1 ID = 0] [A2 1 = 0] [A3 2 = 0] [A4 3 = 0] [A5 4 = 0]]
+
+[
+A1: cell reference
+ID: content of cell
+=
+0: DataFormula : 0 if it not a formula; formula itself if it’s a valid formula; have special letters if not valid
+]
+
+Asks for A1-A10
+A6-A10  is empty, so don’t send A6-A10
+*/
 
 func setDependencies(reference Reference, dv *DynamicValue, grid *Grid) *DynamicValue {
 
