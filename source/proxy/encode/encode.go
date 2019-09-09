@@ -48,8 +48,9 @@ func pathToRoot(child *stree.Node) int {
 }
 
 func WriteToFile(filePath string, t *stree.Tree) {
+	log.Printf("Here is WriteToFile in encode.go\n")
 	//writeData := EncodeStree(t)
-	f, err := os.OpenFile(filePath, os.O_RDWR, 777)
+	f, err := os.OpenFile(filePath, os.O_RDWR, 0755)
 	if err == nil {
 		f.Close()
 		err = os.Remove(filePath)
@@ -61,7 +62,7 @@ func WriteToFile(filePath string, t *stree.Tree) {
 	encodedStree := EncodeStree(t)
 	//fmt.Printf(encodedStree)
 
-	f, err = os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 777)
+	f, err = os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		panic(err)
 	}
@@ -70,6 +71,28 @@ func WriteToFile(filePath string, t *stree.Tree) {
 	f.WriteString(encodedStree)
 	f.Close()
 
+}
+
+func ReadFromFile(filePath string) *stree.Tree {
+	//writeData := EncodeStree(t)
+	f, err := os.OpenFile(filePath, os.O_RDWR, 0755)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	fi, _ := f.Stat()
+	size := fi.Size()
+	readdata := make([]byte, size)
+	f.Read(readdata)
+	//	log.Printf("Here is ReadFromFile, str:\n")
+	str := string(readdata)
+	//	log.Printf(str)
+	//	log.Printf("\n")
+	//fmt.Printf("Before DecodeStree\n")
+	t := DecodeStree(str)
+	//	log.Printf("Here is before return from ReadFromFile, tree:\n")
+	//	t.PrintTree()
+	return t
 }
 
 func EncodeStree(t *stree.Tree) string {
@@ -117,28 +140,6 @@ func EncodeStree(t *stree.Tree) string {
 		}
 	}
 	return str
-}
-
-func ReadFromFile(filePath string) *stree.Tree {
-	//writeData := EncodeStree(t)
-	f, err := os.OpenFile(filePath, os.O_RDWR, 777)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	fi, _ := f.Stat()
-	size := fi.Size()
-	readdata := make([]byte, size)
-	f.Read(readdata)
-	//	log.Printf("Here is ReadFromFile, str:\n")
-	str := string(readdata)
-	//	log.Printf(str)
-	//	log.Printf("\n")
-	//fmt.Printf("Before DecodeStree\n")
-	t := DecodeStree(str)
-	//	log.Printf("Here is before return from ReadFromFile, tree:\n")
-	//	t.PrintTree()
-	return t
 }
 
 func DecodeStree(str string) *stree.Tree {

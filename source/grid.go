@@ -471,6 +471,7 @@ func gridInstance(c *Client) {
 
 			case "GET": // ask for cells in a specific range
 				//parsed[1] = "GET"
+				log.Printf("Here is case GET\n")
 				sendCellsInRange(ReferenceRange{String: parsed[1], SheetIndex: getIndexFromString(parsed[2])}, &grid, c, tree)
 
 			case "SWITCHSHEET":
@@ -537,11 +538,57 @@ func gridInstance(c *Client) {
 				removeSheet(sheetIndex, &grid)
 				sendSheets(c, &grid)
 
-			case "COPY":
+				/*
+					//-------------------------start of original case COPY---------------------------------------
+								case "COPY": /////////////////////////////////////////////////////////reorder
+
+									start := time.Now() // debug
+
+									sourceRange := ReferenceRange{parsed[1], getIndexFromString(parsed[2])}
+									destinationRange := ReferenceRange{parsed[3], getIndexFromString(parsed[4])}
+
+									copySourceToDestination(sourceRange, destinationRange, &grid, false)
+
+									elapsed := time.Since(start)                           // debug
+									log.Printf("copySourceToDestination took %s", elapsed) // debug
+
+									start = time.Now() // debug
+
+									changedCells := computeDirtyCells(&grid, c)
+
+									elapsed = time.Since(start)                      // debug
+									log.Printf("computeDirtyCells took %s", elapsed) // debug
+
+									sendDirtyOrInvalidate(changedCells, &grid, c)
+					//-------------------------end of original case COPY---------------------------------------
+				*/
+
+			//------------------------- start rewrite case COPY to be reorder---------------------------------------
+			case "COPY": /////////////////////////////////////////////////////////reorder
+				log.Printf("Here is case COPY\n")
 
 				start := time.Now() // debug
 
 				sourceRange := ReferenceRange{parsed[1], getIndexFromString(parsed[2])}
+				startRow, endRow, _, _, _ := cellRangeToRowColRange(sourceRange)
+
+				//var originalOrder [100]int
+				//var newOrder []int
+				newOrder := make([]int, 50)
+				originalOrder := make([]int, 50)
+				for i := startRow; i <= endRow; i++ {
+					_, _, originalOrder[i-startRow], _ = tree.Query(i, false)
+				}
+				num := endRow - startRow + 1
+				for j := 0; j < num; j++ {
+					newOrder[j] = originalOrder[num-1-j]
+				}
+
+				log.Printf("newOrder:\n")
+				log.Print(newOrder)
+
+				tree.Reorder(startRow, endRow, newOrder, tree.Root)
+
 				destinationRange := ReferenceRange{parsed[3], getIndexFromString(parsed[4])}
 
 				copySourceToDestination(sourceRange, destinationRange, &grid, false)
@@ -556,7 +603,8 @@ func gridInstance(c *Client) {
 				elapsed = time.Since(start)                      // debug
 				log.Printf("computeDirtyCells took %s", elapsed) // debug
 
-				sendDirtyOrInvalidate(changedCells, &grid, c)
+				sendDirtyOrInvalidateForCOPY(changedCells, &grid, c)
+				//-------------------------end rewrite case COPY to be reorder---------------------------------------
 
 			case "COPYASVALUE":
 
@@ -912,6 +960,7 @@ func gridInstance(c *Client) {
 				c.send <- json
 
 			case "SAVE":
+				log.Printf("Here is case SAVE\n")
 				fmt.Println("Saving workspace...")
 
 				serializedGrid := ToGOB64(grid)
@@ -921,11 +970,36 @@ func gridInstance(c *Client) {
 				if err != nil {
 					fmt.Println(err)
 				}
-
+				encode.WriteToFile(streeFile, tree)
 				c.send <- []byte("[\"SAVED\"]")
+
+				/*
+						//-------------------------original SORT---------------------------------------------------------------
+					case "SORT":
+						sortRange(parsed[1], parsed[2], parsed[3], &grid) // direction (ASC,DESC), range ("A1:B20"), column ("B")
+						computeDirtyCells(&grid, c)
+						invalidateView(&grid, c)
+						//-------------------------original SORT---------------------------------------------------------------
+				*/
 			case "SORT":
-				sortRange(parsed[1], parsed[2], parsed[3], &grid) // direction (ASC,DESC), range ("A1:B20"), column ("B")
-				computeDirtyCells(&grid, c)
+				log.Printf("Here is case SORT\n")
+				startRow, _, endRow, _ := cellRangeBoundaries(parsed[2])
+				log.Printf("startRow=%d, endRow=%d\n", startRow, endRow)
+
+				newOrder := make([]int, 50)
+				originalOrder := make([]int, 50)
+				for i := startRow; i <= endRow; i++ {
+					_, _, originalOrder[i-startRow], _ = tree.Query(i, false)
+				}
+				num := endRow - startRow + 1
+				for j := 0; j < num; j++ {
+					newOrder[j] = originalOrder[num-1-j]
+				}
+
+				log.Printf("newOrder:\n")
+				log.Print(newOrder)
+
+				tree.Reorder(startRow, endRow, newOrder, tree.Root)
 				invalidateView(&grid, c)
 			}
 		}
@@ -1467,6 +1541,13 @@ func sendSheetSize(c *Client, sheetIndex int8, grid *Grid) {
 	c.send <- json
 }
 
+//------------------------------for rewrite COPY to be reorder------------------------------------------------------
+func sendDirtyOrInvalidateForCOPY(changedCells []Reference, grid *Grid, c *Client) {
+	invalidateView(grid, c)
+}
+
+//------------------------------for rewrite COPY to be reorder------------------------------------------------------
+
 func sendDirtyOrInvalidate(changedCells []Reference, grid *Grid, c *Client) {
 	// magic number to speed up cell updating
 	if len(changedCells) < 100 {
@@ -1483,6 +1564,8 @@ func invalidateView(grid *Grid, c *Client) {
 	c.send <- json
 }
 
+//----------------------------start of function used for my own connection to db----------------------------------------------------------------
+/*
 func referenceFromUserViewToGridByStree(referenceInUserView Reference, t *stree.Tree) (Reference, bool) {
 	log.Println("Here is referenceFromUserViewToGridByStree in grid.go")
 	//log.Printf("referenceInUserView=\n")
@@ -1511,6 +1594,7 @@ func referenceFromUserViewToGridByStree(referenceInUserView Reference, t *stree.
 	log.Printf("newstr = %s\n", newstr)
 	return Reference{newstr, sheetindex}, true
 }
+
 
 func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client, t *stree.Tree) {
 
@@ -1551,6 +1635,91 @@ func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client, t *stree.
 	log.Println(cellsToSend)
 	sendCells(&cellsToSend, c)
 }
+
+*/
+//----------------------------end of function used for my own connection to db----------------------------------------------------------------
+
+//------------------------------start of functions for Min's interface-------------------------------------------------------------------------
+func referenceFromUserViewToGridByStree(referenceInUserView Reference, t *stree.Tree) (Reference, bool, int) {
+	log.Println("Here is referenceFromUserViewToGridByStree in grid.go")
+	//log.Printf("referenceInUserView=\n")
+	//log.Print(referenceInUserView)
+	a1 := referenceInUserView.String
+	leng := len(a1)
+	numInStr := a1[1:leng]
+	//log.Printf("a1 = %s, leng = %d, numInStr = %s\n", a1, leng, numInStr)
+	userPos, _ := strconv.Atoi(numInStr)
+	log.Printf("userPos = %d\n", userPos)
+	if userPos > t.NumKeys {
+		log.Printf("t.NumKeys +1 = %d\n", t.NumKeys+1)
+		return referenceInUserView, false, 0
+	}
+	_, _, treeKey, err := t.Query(userPos, false)
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Printf("treeKey = %d\n", treeKey)
+	sheetindex := referenceInUserView.SheetIndex
+	newstr := string(referenceInUserView.String[0]) + strconv.Itoa(treeKey)
+	log.Printf("newstr = %s\n", newstr)
+	return Reference{newstr, sheetindex}, true, treeKey
+}
+
+/*
+func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client, t *stree.Tree)
+get cell range
+send cell content
+1. translate cell range into Row and Col range. Eg, A1-M33 --> row 1-33, col 1-13   (by func cellRangeToRowColRange )
+2. use stree to get an array of rowIDs. Eg, row1-5 --> rowID[2, 4, 6, 8, 9]
+3. query those rows in database (by func getDataFromRowCol)
+4. send data to the front end
+*/
+
+func sendCellsInRange(cellRange ReferenceRange, grid *Grid, c *Client, t *stree.Tree) {
+
+	log.Printf("New!! Here is sendCellsInRange in grid.go.\n")
+
+	startRow, endRow, startCol, endCol, sheetindex := cellRangeToRowColRange(cellRange)
+	log.Printf("Here is sendCellsInRange in grid.go, returned from cellRangeToCells.\n")
+	log.Printf("startRow=%d, endRow=%d, startCol=%d, endCol=%d, sheetindex=%d\n", startRow, endRow, startCol, endCol, sheetindex)
+	//cells: []reference
+	//Reference = {A1, 0}   String, SheetIndex
+
+	cellsToSend := [][]string{}
+	rowNumInDB := t.NumKeys
+	var rowsInDB []int
+	i_rowsInDB := 0
+	for i := startRow; i <= endRow; i++ {
+		if i > rowNumInDB {
+			break
+		}
+		_, _, treeKey, _ := t.Query(i, false)
+		rowsInDB = append(rowsInDB, treeKey) //[i_rowsInDB] = treeKey
+		i_rowsInDB++
+	}
+
+	//assume the table is located in top left
+	dyva := getDataFromRowCol(rowsInDB, startCol, endCol)
+	RowNumdyva := len(dyva)
+	var dv *DynamicValue
+	for i := 0; i < RowNumdyva; i++ { // 20 rows
+		rowDV := dyva[i]
+		for j := 0; j < 5; j++ {
+			dv = rowDV[j]
+			stringAfter := convertToString(dv)
+			str := indexToLetters(j+1) + strconv.Itoa(i+1)
+			referenceInUserView := Reference{str, int8(sheetindex)}
+			cellsToSend = append(cellsToSend, []string{relativeReferenceString(referenceInUserView), stringAfter.DataString, "=" + dv.DataFormula, strconv.Itoa(int(dv.SheetIndex))})
+
+		}
+	}
+
+	log.Println("cellsToSend:")
+	log.Println(cellsToSend)
+	sendCells(&cellsToSend, c)
+}
+
+//------------------------------start of functions for Min's interface-------------------------------------------------------------------------
 
 /*
 //-----------------------------------------------------------need to change for ordered data----------------------------------------------------

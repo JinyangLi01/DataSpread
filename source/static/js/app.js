@@ -588,7 +588,7 @@
 					_this.sortRange("DESC", _this.selectionToLowerUpper(_this.selectedCells));
 				}else if($(this).hasClass('copy')){
 					_this.copySelection();
-				}else if($(this).hasClass('cut')){
+				}else if($(this).hasClass('cut')){          //////////////////////////////////////reorder
 					_this.cutSelection();
 				}else if($(this).hasClass('paste')){
 					_this.pasteSelection();

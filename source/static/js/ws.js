@@ -134,7 +134,6 @@
                             var fileSplit = json[1].split(".");
                             var extension = fileSplit[fileSplit.length -1];
                             _this.app.editor.setContent(fileDecoded, extension, json[1]);
-
                         }
                         else if(json[0] == "JUMPCELL"){
 

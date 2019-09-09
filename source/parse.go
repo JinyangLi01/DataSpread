@@ -11,6 +11,7 @@ import (
 	"strings"
 	"unicode"
 
+	sqlinterface "git.minhyukpark.com/MinhyukPark/go-sql-interface.git"
 	matrix "github.com/skelterjohn/go.matrix"
 )
 
@@ -99,9 +100,126 @@ func getData(ref1 DynamicValue, grid *Grid) *DynamicValue {
 	return (grid.Data)[ref1.DataString]
 }
 
+//--------------------------------------original function------------------------------------------------------
 func getDataFromRef(reference Reference, grid *Grid) *DynamicValue {
 	return grid.Data[getMapIndexFromReference(reference)]
 }
+
+//--------------------------------------original function------------------------------------------------------
+
+//------------------------------------------new function--------------------------------------------------------
+
+func getDataFromRowCol(rowsInDB []int, startCol int, endCol int) [][10]*DynamicValue {
+	fmt.Printf("Here is getDataFromRowCol")
+
+	mysqlDb := sqlinterface.DB{
+		DbType:       "mysql",
+		DatabaseName: "mydb",
+		Table:        "students",
+		Username:     "root",
+		Password:     "123",
+	}
+	ra := sqlinterface.RowAccess{
+		Column:  "ID",
+		Indices: rowsInDB,
+	}
+	res := mysqlDb.GetRows(ra)
+	rowNum := len(res)
+
+	//	log.Printf("res = \n")
+	//	log.Print(res)
+	//	log.Printf("rowNum = %d\n", rowNum)
+
+	c := 0
+	var DataToSend [][10]*DynamicValue
+	//validcolNum := 5 ///////fix here for test convenience
+	for i := 0; i < rowNum; i++ {
+		var dataToAppend [10]*DynamicValue
+		curRow := res[i]
+		//	log.Printf("curRow = res[%d]:", i)
+		//	log.Print(curRow)
+		c = 0
+		for j := startCol; j <= endCol; j++ {
+			dv := makeDv("")
+			if 1 <= j && j <= 5 {
+				//log.Printf("j = %d\n", j)
+				switch j {
+				case 1: //int ID
+					//	log.Printf("case 1:\n")
+					//	log.Printf("curRow.ID = %d\n", curRow.ID)
+					{
+						dv.ValueType = DynamicValueTypeString
+						//log.Printf("dv.ValueType = %d", DynamicValueTypeString)
+						dv.DataString = strconv.Itoa(curRow.ID)
+						//dv = DynamicValue{DynamicValueTypeString, strconv.Itoa(curRow.ID)}
+						//	log.Printf("i=%d, j=%d, c=%d, DataString = %s\n", i, j, c, dv.DataString)
+						dataToAppend[c] = dv
+						c++
+					}
+
+				case 2: //string NAME
+					{
+						dv.ValueType = DynamicValueTypeString
+						dv.DataString = curRow.NAME
+						//	log.Printf("i=%d, j=%d, c=%d, DataString = %s\n", i, j, c, dv.DataString)
+						dataToAppend[c] = dv
+						c++
+					}
+
+				case 3: //int Age
+					{
+						dv.ValueType = DynamicValueTypeString
+						dv.DataString = strconv.Itoa(curRow.Age)
+						//	log.Printf("i=%d, j=%d, c=%d, DataString = %s\n", i, j, c, dv.DataString)
+						dataToAppend[c] = dv
+						c++
+					}
+
+				case 4: //string Department
+					{
+						dv.ValueType = DynamicValueTypeString
+						dv.DataString = curRow.Department
+						//	log.Printf("i=%d, j=%d, c=%d, DataString = %s\n", i, j, c, dv.DataString)
+						dataToAppend[c] = dv
+						c++
+					}
+
+				case 5: //float32
+					{
+						dv.ValueType = DynamicValueTypeFloat
+						dv.DataFloat = float64(curRow.GPA)
+						//	log.Printf("i=%d, j=%d, c=%d, DataFloat = %f\n", i, j, c, dv.DataFloat)
+						dataToAppend[c] = dv
+						c++
+					}
+
+				}
+			} else {
+				break
+			}
+		}
+		DataToSend = append(DataToSend, dataToAppend)
+	}
+	//log.Print("Here is parse.go, getDataFromRowCol. DataToSend:\n")
+	//log.Print(DataToSend)
+	/*
+		log.Printf("Here is getDataFromRowCol, before return. DataToSend:\n")
+		for i := 0; i < 20; i++ {
+			for j := 0; j < 5; j++ {
+				dv := DataToSend[i][j]
+				if dv.ValueType == DynamicValueTypeFloat {
+					log.Printf("i=%d, j=%d, DataFloat = %f\n", i, j, dv.DataFloat)
+				} else {
+					log.Printf("i=%d, j=%d, DataString = %s\n", i, j, dv.DataString)
+				}
+			}
+		}
+	*/
+	return DataToSend
+}
+
+//------------------------------------------new function--------------------------------------------------------
+
 func checkDataPresenceFromRef(reference Reference, grid *Grid) bool {
 	_, ok := grid.Data[getMapIndexFromReference(reference)]
 	return ok
@@ -394,6 +512,32 @@ func referencesToUpperCase(formula string) string {
 	return formula
 }
 
+//get reference of cell range
+//return row range: start row, end row, start col, end col, sheetindex
+func cellRangeToRowColRange(referenceRange ReferenceRange) (int, int, int, int, int) {
+	log.Printf("Here is parse.go, cellRangeToRowRange. referenceRange: \n")
+	log.Printf("%s, %d\n", referenceRange.String, referenceRange.SheetIndex)
+	// A1:N33, 0
+
+	cell1Row, cell1Column, cell2Row, cell2Column := cellRangeBoundaries(referenceRange.String)
+
+	// illegal argument, cell1Row should always be lower
+	if cell1Row > cell2Row {
+		return 0, 0, 0, 0, 0
+	}
+	// illegal argument, cell1Column should always be lower
+	if cell1Column > cell2Column {
+		return 0, 0, 0, 0, 0
+	}
+	return cell1Row, cell2Row, cell1Column, cell2Column, int(referenceRange.SheetIndex)
+
+	// all equals means just one cell, example: A1:A2
+	// if cell1Row == cell2Row && cell1Column == cell2Column {
+	// 	references = append(references, indexToLetters(cell1Column)+strconv.Itoa(cell1Row))
+	// 	return references
+	// }
+}
+
 // get cell references, send cell contents
 func cellRangeToCells(referenceRange ReferenceRange) []Reference {
 	log.Printf("Here is parse.go, cellRangeToCells. referenceRange: \n")
@@ -418,18 +562,30 @@ func cellRangeToCells(referenceRange ReferenceRange) []Reference {
 	// 	return references
 	// }
 
-	for x := cell1Column; x <= cell2Column; x++ {
-		for y := cell1Row; y <= cell2Row; y++ {
-			references = append(references, Reference{String: indexToLetters(x) + strconv.Itoa(y), SheetIndex: referenceRange.SheetIndex})
-			/*log.Printf("x=%d, y=%d\n", x, y)
-			s1 := indexToLetters(x)
-			s2 := strconv.Itoa(y)
+	for x := cell1Row; x <= cell2Row; x++ {
+		for y := cell1Column; y <= cell2Column; y++ {
+			references = append(references, Reference{String: indexToLetters(y) + strconv.Itoa(x), SheetIndex: referenceRange.SheetIndex})
+			log.Printf("x=%d, y=%d\n", x, y)
+			s1 := indexToLetters(y)
+			s2 := strconv.Itoa(x)
 			s3 := s1 + s2
 			log.Println(s3)
-			log.Printf("SheetIndex=%d\n", referenceRange.SheetIndex) */
+			log.Printf("SheetIndex=%d\n", referenceRange.SheetIndex)
 		}
 	}
-
+	/*
+		for x := cell1Column; x <= cell2Column; x++ {
+			for y := cell1Row; y <= cell2Row; y++ {
+				references = append(references, Reference{String: indexToLetters(x) + strconv.Itoa(y), SheetIndex: referenceRange.SheetIndex})
+				/*log.Printf("x=%d, y=%d\n", x, y)
+				s1 := indexToLetters(x)
+				s2 := strconv.Itoa(y)
+				s3 := s1 + s2
+				log.Println(s3)
+				log.Printf("SheetIndex=%d\n", referenceRange.SheetIndex)
+			}
+		}
+	*/
 	//Reference {String string, SheetIndex int8}
 	// {A1, 0}
 
@@ -1085,6 +1241,7 @@ func indexesToReferenceWithFixed(row int, col int, fixedRow bool, fixedColumn bo
 	return firstPrefix + indexToLetters(col) + secondPrefix + strconv.Itoa(row)
 }
 
+//A = 1
 func indexToLetters(index int) string {
 
 	base := float64(26)
